@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Secret Formula — a Bikini Bottom chemistry lab</title>
+<meta name="description" content="Balance real chemical equations to reconstruct Plankton's stolen Krabby Patty formula. Exact stoichiometry, a live atom ledger, a three-step hint ladder and no timer. Single HTML file, zero dependencies. Fan tribute.">
+<meta name="theme-color" content="#04242e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2304242e'/%3E%3Cpath d='M25 11h14v13l9 21a5 5 0 0 1-4.6 7H20.6A5 5 0 0 1 16 45l9-21z' fill='%23dff3d0' stroke='%23f7d219' stroke-width='3' stroke-linejoin='round'/%3E%3Cpath d='M18 37h28l4.5 10a4 4 0 0 1-3.7 5.5H17.2A4 4 0 0 1 13.5 47z' fill='%237fc341'/%3E%3C/svg%3E">
+<style>
+:root{
+  --abyss:#02171d; --deep:#04242e; --lab:#072f3b; --line:rgba(214,240,246,.14);
+  --paper:#f7eed8; --paper2:#efe0bd; --edge:#b08b46; --ink:#1f2a2c; --ink2:#5f6b6c;
+  --yellow:#f7d219; --chum:#7fc341; --krab:#cf4331; --ok:#177a56; --bad:#b03a2e;
+  --font:'Trebuchet MS','Segoe UI',system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,'Cascadia Mono',Consolas,'SF Mono',monospace;
+  --r:14px; --shadow:0 14px 34px rgba(0,0,0,.34);
+}
+*,*::before,*::after{box-sizing:border-box}
+/* .btn and .massrow set display:flex, which beats the UA [hidden] rule.
+   Without this, a "hidden" Next button and mass bar still paint. */
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; font-family:var(--font); color:#e9f6fa; min-height:100svh;
+  background:var(--deep);
+  background-image:radial-gradient(115% 70% at 50% -8%,#0f6178 0%,var(--lab) 38%,var(--deep) 74%,var(--abyss) 100%);
+  background-attachment:fixed; overflow-x:hidden; padding:20px 14px 40px;
+  -webkit-tap-highlight-color:transparent;
+}
+body.big{font-size:18px}
+.bg{position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:linear-gradient(rgba(140,220,240,.05) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(140,220,240,.05) 1px,transparent 1px);
+  background-size:36px 36px;
+  -webkit-mask-image:radial-gradient(62% 52% at 50% 26%,#000,transparent 78%);
+  mask-image:radial-gradient(62% 52% at 50% 26%,#000,transparent 78%);
+}
+body.calm .bg{opacity:.35}
+.skip{position:absolute; left:-9999px; top:0; z-index:9; background:var(--yellow); color:#1a1508;
+  padding:10px 16px; border-radius:0 0 10px 0; font-weight:700}
+.skip:focus{left:0}
+button{font:inherit; cursor:pointer; color:inherit; border:0}
+h1,h2,h3{margin:0}
+.masthead{position:relative; z-index:1; max-width:1080px; margin:0 auto 14px;
+  display:flex; flex-wrap:wrap; gap:12px 20px; align-items:flex-end; justify-content:space-between}
+.brand{display:flex; gap:12px; align-items:center; min-width:0}
+.mark{width:52px; height:52px; flex:0 0 auto; border-radius:13px;
+  background:linear-gradient(180deg,#0d4657,#072b35); border:1px solid var(--line);
+  display:grid; place-items:center; box-shadow:inset 0 2px 0 rgba(255,255,255,.08)}
+h1{font-size:clamp(25px,4.4vw,38px); letter-spacing:.01em; color:var(--yellow);
+  text-shadow:0 2px 0 #9a7c10, 0 10px 22px rgba(0,0,0,.45); line-height:1.05}
+.tagline{margin:6px 0 0; max-width:48ch; color:#bde2ee; font-size:clamp(12.5px,1.8vw,14.5px); line-height:1.45}
+.navbtns{display:flex; gap:8px; flex-wrap:wrap}
+.ghost{background:rgba(255,255,255,.08); border:1px solid var(--line); border-radius:10px;
+  padding:8px 13px; color:#dff1f6; font-size:14px; transition:background .12s}
+.ghost:hover{background:rgba(255,255,255,.16)}
+:focus-visible{outline:3px solid var(--yellow); outline-offset:2px}
+
+/* ---- progress ---- */
+.progrow{position:relative; z-index:1; max-width:1080px; margin:0 auto 14px;
+  display:flex; align-items:center; gap:12px}
+.bar{flex:1; height:8px; border-radius:99px; background:rgba(255,255,255,.1);
+  overflow:hidden; border:1px solid var(--line)}
+#progFill{display:block; height:100%; width:0%; border-radius:99px;
+  background:linear-gradient(90deg,var(--chum),var(--yellow)); transition:width .3s}
+.progtext{font-size:12.5px; color:#a9d3e0; white-space:nowrap; letter-spacing:.04em}
+
+/* ---- layout ---- */
+.lab{position:relative; z-index:1; max-width:1080px; margin:0 auto;
+  display:grid; grid-template-columns:minmax(0,1.42fr) minmax(0,1fr); gap:14px; align-items:start}
+.col-main,.col-side{display:grid; gap:14px; min-width:0}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.028));
+  border:1px solid var(--line); border-radius:var(--r); padding:15px 16px 14px; box-shadow:var(--shadow)}
+.cardhead{display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 12px;
+  justify-content:space-between; margin-bottom:10px}
+.card h2{font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:#9fd6e6; font-weight:700}
+.lvlno,.hintline{font-size:12px; color:#8fbccb; letter-spacing:.04em}
+
+/* ---- equation card: paper ---- */
+.eqcard{background:linear-gradient(180deg,#fdf8ea,var(--paper) 38%,var(--paper2));
+  border-color:var(--edge); color:var(--ink);
+  box-shadow:var(--shadow), inset 0 2px 0 rgba(255,255,255,.85)}
+.eqcard h2{color:#7d5c1d}
+.band{font-size:13px!important; letter-spacing:.1em}
+.equation{display:flex; flex-wrap:wrap; align-items:center; gap:6px 4px; padding:6px 0 4px}
+.term{display:inline-flex; align-items:center; gap:4px; flex:0 0 auto}
+.species{display:flex; align-items:center; gap:7px; padding:5px 9px 5px 4px; border-radius:11px;
+  border:2px solid transparent; background:rgba(255,255,255,.62);
+  transition:border-color .12s, background .12s}
+.species.sel{border-color:#c39a2a; background:#fffdf6}
+.coefctl{display:flex; align-items:center; gap:2px; background:#241c10; border-radius:8px; padding:2px}
+.cbtn{width:27px; height:27px; border-radius:7px; background:#3c2e18; color:var(--yellow);
+  font-size:16px; line-height:1; display:grid; place-items:center; transition:background .1s}
+.cbtn:hover{background:#57431f}
+.cbtn:active{transform:translateY(1px)}
+.cval{min-width:24px; text-align:center; font:700 14px/1 var(--mono); color:#ffe9a8;
+  font-variant-numeric:tabular-nums}
+.formula{font:600 clamp(19px,2.8vw,26px)/1 var(--mono); color:#101d1e; letter-spacing:.005em}
+.formula sub{font-size:.6em; vertical-align:-.28em}
+.op{font:600 19px/1 var(--mono); color:#8a6a28; padding:0 1px; user-select:none}
+.status{margin-top:9px; font-size:13.5px; min-height:20px; color:var(--ink2); line-height:1.4}
+.status.ok{color:var(--ok); font-weight:700}
+.status.off{color:#8a4a3a}
+.note{margin:8px 0 0; font-size:12.5px; color:#6d6152; line-height:1.5; min-height:1.2em}
+.massrow{display:flex; flex-wrap:wrap; gap:6px 8px; margin-top:10px; padding-top:9px;
+  border-top:1px dashed rgba(120,90,30,.35); font-size:11.5px; color:#6b6047}
+.massrow b{font-family:var(--mono); color:#4c4229}
+.massrow .mtotal{flex:1 0 100%; padding-top:5px; color:#4c4229; font-weight:700}
+.massrow sub{font-size:.7em; vertical-align:-.22em}
+
+/* ---- ledger ---- */
+.tablewrap{overflow-x:auto; margin:0 -5px; padding:0 5px}
+table{border-collapse:collapse; width:100%; font-size:13.5px}
+th{text-align:left; font-size:10.5px; letter-spacing:.13em; text-transform:uppercase;
+  color:#8fc7d8; padding:6px 8px; border-bottom:1px solid var(--line); font-weight:700}
+td{padding:6px 8px; border-bottom:1px solid rgba(255,255,255,.06); font-family:var(--mono);
+  font-variant-numeric:tabular-nums}
+td.el{font-weight:700; color:#e8f6fa}
+td.name{font-family:var(--font); color:#a9c8d2; font-size:12.5px}
+th.num,td.num{text-align:right}
+tr.row-ok td.delta{color:#7fe3b0; font-weight:700}
+tr.row-bad td.delta{color:#ff9c8a; font-weight:700}
+.lednote{margin:9px 0 0; font-size:11.5px; color:#8fbccb}
+
+/* ---- tools ---- */
+.tools{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.btn{background:rgba(255,255,255,.1); border:1px solid var(--line); border-radius:10px;
+  padding:10px 12px; font-size:14px; color:#e6f5f9; text-align:center; transition:background .12s;
+  display:flex; align-items:center; justify-content:center; gap:7px; min-height:44px}
+.btn:hover:not(:disabled){background:rgba(255,255,255,.18)}
+.btn:disabled{opacity:.42; cursor:not-allowed}
+.btn.primary{grid-column:1/-1; background:linear-gradient(180deg,var(--chum),#5da52c);
+  color:#10250a; font-weight:700; border-color:#4e8c25}
+.btn.primary:hover{background:linear-gradient(180deg,#8fd94f,#68b433)}
+.badge{font:700 11px/1 var(--mono); background:rgba(247,210,25,.9); color:#25200a;
+  border-radius:99px; padding:2px 6px}
+.hinttext{margin:10px 0 0; font-size:13px; line-height:1.55; color:#cfe8f0; min-height:2.6em}
+.hinttext strong{color:var(--yellow)}
+.switch{display:flex; align-items:flex-start; gap:9px; padding:7px 0; font-size:13.5px;
+  color:#dceef4; cursor:pointer; line-height:1.4}
+.switch input{width:19px; height:19px; margin:1px 0 0; accent-color:var(--chum); flex:0 0 auto}
+.small{margin:10px 0 0; font-size:11.5px; color:#8fbccb; line-height:1.5}
+.keys{display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin:0; font-size:13px}
+.keys dt{font-family:var(--mono); font-size:12px; color:var(--yellow); background:rgba(0,0,0,.25);
+  border:1px solid var(--line); border-radius:6px; padding:2px 6px; justify-self:start; white-space:nowrap}
+.keys dd{margin:0; color:#bfdbe4}
+
+/* ---- footer ---- */
+footer{position:relative; z-index:1; max-width:1080px; margin:18px auto 0;
+  font-size:11.5px; color:#7ba7b6; line-height:1.6; text-align:center}
+footer a{color:#9fd6e6}
+
+/* ---- dialogs ---- */
+dialog{border:0; border-radius:16px; padding:0; background:var(--paper); color:var(--ink);
+  max-width:min(760px,94vw); width:100%; max-height:88svh; box-shadow:0 30px 70px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(2,14,18,.74)}
+.dlghead{display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:16px 18px 12px; border-bottom:2px solid rgba(140,105,40,.35); position:sticky; top:0;
+  background:var(--paper); border-radius:16px 16px 0 0}
+.dlghead h2{font-size:16px; letter-spacing:.1em; text-transform:uppercase; color:#7d5c1d}
+.dlgclose{background:#e6d5ab; border-radius:8px; padding:6px 12px; font-size:13px; color:#4a3a16; font-weight:700}
+.dlgbody{padding:16px 18px 20px; overflow:auto; max-height:calc(88svh - 62px); font-size:14px; line-height:1.6}
+.dlgbody h3{font-size:13px; letter-spacing:.1em; text-transform:uppercase; color:#8a6a28; margin:18px 0 6px}
+.dlgbody h3:first-child{margin-top:0}
+.dlgbody p{margin:0 0 10px}
+.dlgbody ol,.dlgbody ul{margin:0 0 12px; padding-left:20px}
+.dlgbody li{margin:0 0 6px}
+.dlgbody code{font-family:var(--mono); background:#e8d8b0; border-radius:4px; padding:1px 5px; font-size:12.5px}
+.callout{background:#efe0bd; border-left:4px solid #b08b46; border-radius:0 8px 8px 0;
+  padding:10px 12px; margin:0 0 12px; font-size:13px}
+.eltable{display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:6px}
+.elchip{border:1px solid rgba(120,90,30,.35); border-radius:8px; padding:6px 8px; background:#fdf8ea;
+  font-size:11.5px; line-height:1.35}
+.elchip b{font-family:var(--mono); font-size:15px; display:block; color:#2c2318}
+.elchip span{color:#6d6152}
+.elchip.used{background:#e9f4d8; border-color:#7fc341}
+.lvgrid{display:grid; gap:10px}
+.lvband{font-size:11.5px; letter-spacing:.12em; text-transform:uppercase; color:#8a6a28; font-weight:700; margin:6px 0 0}
+.lvrow{display:grid; grid-template-columns:repeat(auto-fill,minmax(38px,1fr)); gap:5px}
+.lvbtn{border:1px solid rgba(120,90,30,.4); border-radius:7px; background:#fdf8ea;
+  padding:7px 0; font:700 12.5px/1 var(--mono); color:#4a3a16; position:relative}
+.lvbtn:hover{background:#fff}
+.lvbtn.cur{background:#f7d219; border-color:#9a7c10}
+.lvbtn.done{background:#d9edc2; border-color:#7fc341; color:#2a4a14}
+.lvbtn.done::after{content:""; position:absolute; right:3px; top:3px; width:5px; height:5px;
+  border-radius:50%; background:#4e8c25}
+
+@media (max-width:920px){
+  .lab{grid-template-columns:1fr}
+  .col-side{order:2}
+}
+@media (max-width:560px){
+  body{padding:14px 10px 32px}
+  .mark{width:44px;height:44px}
+  .tools{grid-template-columns:1fr 1fr}
+  .card{padding:13px 13px 12px}
+  /* keep the element-name column: it is half the lesson, and hiding it left a
+     dead gap between the symbol and the counts. Tighten instead of dropping. */
+  table{font-size:12.5px}
+  th,td{padding:5px 5px}
+  td.name{font-size:11px}
+  .equation{gap:5px 3px}
+  .species{padding:4px 7px 4px 3px; gap:5px}
+  .cbtn{width:32px; height:32px; font-size:18px}
+  .cval{min-width:28px; font-size:15px}
+  .tools{grid-template-columns:repeat(3,1fr)}
+  .tools .btn{padding:9px 6px; font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important; animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+<a class="skip" href="#lab">Skip to the equation</a>
+
+<header class="masthead">
+  <div class="brand">
+    <div class="mark" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M25 11h14v13l9 21a5 5 0 0 1-4.6 7H20.6A5 5 0 0 1 16 45l9-21z" fill="#dff3d0" stroke="#f7d219" stroke-width="3.4" stroke-linejoin="round"/>
+        <path d="M18 37h28l4.5 10a4 4 0 0 1-3.7 5.5H17.2A4 4 0 0 1 13.5 47z" fill="#7fc341"/>
+      </svg>
+    </div>
+    <div>
+      <h1>The Secret Formula</h1>
+      <p class="tagline">Plankton finally stole the recipe. It's written as chemistry. Balance each equation to read the next line.</p>
+    </div>
+  </div>
+  <nav class="navbtns" aria-label="Reference">
+    <button id="btnRules" class="ghost" type="button">How to play</button>
+    <button id="btnTable" class="ghost" type="button">Elements</button>
+    <button id="btnLevels" class="ghost" type="button">Equations</button>
+  </nav>
+</header>
+
+<div class="progrow">
+  <div class="bar" id="progBar" role="progressbar" aria-label="Equations balanced"
+       aria-valuemin="0" aria-valuemax="48" aria-valuenow="0"><span id="progFill"></span></div>
+  <span id="progText" class="progtext">0 of 48 balanced</span>
+</div>
+
+<main id="lab" class="lab">
+  <div class="col-main">
+    <section class="card eqcard" aria-labelledby="bandName">
+      <div class="cardhead">
+        <h2 id="bandName" class="band">The Krusty Krab kitchen</h2>
+        <span id="levelNo" class="lvlno">Equation 1 of 48</span>
+      </div>
+      <div id="equation" class="equation"></div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+      <p id="note" class="note"></p>
+      <div id="massrow" class="massrow" hidden></div>
+    </section>
+
+    <section class="card ledgercard" aria-labelledby="ledTitle">
+      <div class="cardhead">
+        <h2 id="ledTitle">Atom ledger</h2>
+        <span class="hintline">left must equal right</span>
+      </div>
+      <div class="tablewrap">
+        <table id="ledger">
+          <thead>
+            <tr>
+              <th scope="col">El</th>
+              <th scope="col">Element</th>
+              <th scope="col" class="num">Left</th>
+              <th scope="col" class="num">Right</th>
+              <th scope="col" class="num">Δ</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="lednote">Δ is right minus left. Nothing here is hidden or random.</p>
+    </section>
+  </div>
+
+  <aside class="col-side">
+    <section class="card" aria-labelledby="toolsTitle">
+      <div class="cardhead"><h2 id="toolsTitle">Tools</h2></div>
+      <div class="tools">
+        <button id="btnHint" class="btn" type="button">Hint <span id="hintCount" class="badge" hidden></span></button>
+        <button id="btnUndo" class="btn" type="button">Undo</button>
+        <button id="btnReset" class="btn" type="button">Start over</button>
+        <button id="btnNext" class="btn primary" type="button" hidden>Next equation</button>
+      </div>
+      <p id="hintText" class="hinttext" aria-live="polite">Hints go one step at a time: the method, then the element furthest out, then a single coefficient. Nothing is counted against you.</p>
+    </section>
+
+    <section class="card" aria-labelledby="setTitle">
+      <div class="cardhead"><h2 id="setTitle">Settings</h2></div>
+      <label class="switch"><input type="checkbox" id="optAudio"><span>Sound — a quiet tone when an equation balances (off by default)</span></label>
+      <label class="switch"><input type="checkbox" id="optBig"><span>Larger text</span></label>
+      <label class="switch"><input type="checkbox" id="optCalm"><span>Calm mode — flat colours, no transitions</span></label>
+      <p class="small">No timers, no scores, no streaks. Every coefficient change is saved immediately, so you can stop mid-equation.</p>
+    </section>
+
+    <section class="card" aria-labelledby="keyTitle">
+      <div class="cardhead"><h2 id="keyTitle">Keyboard</h2></div>
+      <dl class="keys">
+        <dt>← →</dt><dd>choose a coefficient</dd>
+        <dt>↑ ↓</dt><dd>raise / lower it</dd>
+        <dt>1–9</dt><dd>set it exactly</dd>
+        <dt>H U R</dt><dd>hint · undo · restart</dd>
+      </dl>
+    </section>
+  </aside>
+</main>
+
+<footer>
+  <p>A fan tribute — not affiliated with or endorsed by Nickelodeon or Paramount. No artwork, audio or
+  trademarks from the show are used; every pixel is drawn by this page in the browser.</p>
+  <p>Every balance is checked by an exact rational solver, so "balanced" always means balanced.
+  Source on <a href="https://github.com/nwfella/secret-formula">GitHub</a> · MIT licensed code.</p>
+</footer>
+
+<dialog id="dlgRules" aria-labelledby="rulesTitle">
+  <div class="dlghead">
+    <h2 id="rulesTitle">How to play</h2>
+    <button class="dlgclose" type="button" data-close>Close</button>
+  </div>
+  <div class="dlgbody">
+    <h3>The goal</h3>
+    <p>Each equation is missing its coefficients — the numbers in front of the compounds. Change them
+    until every element has the same number of atoms on both sides. That is what "balanced" means in
+    chemistry: mass is conserved, so atoms are never created or destroyed.</p>
+    <div class="callout">Only the numbers in the dark boxes change. The formulas themselves are fixed —
+    you cannot add atoms to a compound, only count how many of each compound take part.</div>
+    <h3>Reading the ledger</h3>
+    <p>The table under the equation counts every element on the left and on the right, multiplied by the
+    coefficients you have set. The Δ column is <code>right − left</code>. When every row reads 0 and
+    every Δ is green, the equation is balanced.</p>
+    <h3>Winning</h3>
+    <p>An equation is solved the moment it balances — there is no confirm button. If you balance it with
+    multiples of the smallest numbers (<code>4 H₂ + 2 O₂ → 4 H₂O</code> instead of
+    <code>2 H₂ + O₂ → 2 H₂O</code>) the game still accepts it and tells you, because chemists write the
+    smallest whole numbers by convention.</p>
+    <h3>If you get stuck</h3>
+    <p><strong>Hint</strong> works in three steps: a general method, then the specific element that is
+    furthest out, then one exact coefficient. Hints are never counted against you, and <strong>Undo</strong>
+    steps backwards one change at a time. <strong>Start over</strong> returns every coefficient to 1.</p>
+    <h3>What is real here</h3>
+    <p>All 48 equations are real reactions with real products. Every one has exactly one valid ratio —
+    that is checked at build time by the same solver the page runs. Molar masses are computed from
+    standard atomic weights. Nothing is a guess and nothing is a placeholder.</p>
+  </div>
+</dialog>
+
+<dialog id="dlgTable" aria-labelledby="tableTitle">
+  <div class="dlghead">
+    <h2 id="tableTitle">Elements</h2>
+    <button class="dlgclose" type="button" data-close>Close</button>
+  </div>
+  <div class="dlgbody">
+    <p class="callout">Green chips are elements that appear in this game's equations. Masses are standard
+    atomic weights in g/mol, used for the molar-mass readout under each equation.</p>
+    <div id="elGrid" class="eltable"></div>
+  </div>
+</dialog>
+
+<dialog id="dlgLevels" aria-labelledby="levelsTitle">
+  <div class="dlghead">
+    <h2 id="levelsTitle">Equations</h2>
+    <button class="dlgclose" type="button" data-close>Close</button>
+  </div>
+  <div class="dlgbody">
+    <p class="callout">Jump to any equation. A green square is one you have balanced.</p>
+    <div id="lvGrid" class="lvgrid"></div>
+  </div>
+</dialog>
+
+<script>
+/* ============================================================================
+   The Secret Formula — Bikini Bottom chemistry lab
+   Single file, zero dependencies. No timers, no network, no scores.
+
+   The point of the design: an equation is a linear system. Each element is one
+   row, each species one column, reactants positive and products negative. The
+   balance is that matrix's null space. With one free variable there is exactly
+   one ratio that works, so "balanced" is a provable fact rather than a guess.
+
+   Fractions are exact (BigInt num/den) so the solver cannot drift.
+   ========================================================================== */
+
+/* CORE-START */
+var Core = (function () {
+  "use strict";
+
+  /* ---------- elements: symbol, name, atomic number, standard atomic weight ---------- */
+  var EL_DATA = [
+    ["H","Hydrogen",1,1.008], ["He","Helium",2,4.0026], ["Li","Lithium",3,6.94],
+    ["Be","Beryllium",4,9.0122], ["B","Boron",5,10.81], ["C","Carbon",6,12.011],
+    ["N","Nitrogen",7,14.007], ["O","Oxygen",8,15.999], ["F","Fluorine",9,18.998],
+    ["Ne","Neon",10,20.180], ["Na","Sodium",11,22.990], ["Mg","Magnesium",12,24.305],
+    ["Al","Aluminium",13,26.982], ["Si","Silicon",14,28.085], ["P","Phosphorus",15,30.974],
+    ["S","Sulfur",16,32.06], ["Cl","Chlorine",17,35.45], ["Ar","Argon",18,39.948],
+    ["K","Potassium",19,39.098], ["Ca","Calcium",20,40.078], ["Ti","Titanium",22,47.867],
+    ["V","Vanadium",23,50.942], ["Cr","Chromium",24,51.996], ["Mn","Manganese",25,54.938],
+    ["Fe","Iron",26,55.845], ["Co","Cobalt",27,58.933], ["Ni","Nickel",28,58.693],
+    ["Cu","Copper",29,63.546], ["Zn","Zinc",30,65.38], ["Se","Selenium",34,78.971],
+    ["Br","Bromine",35,79.904], ["Sr","Strontium",38,87.62], ["Ag","Silver",47,107.87],
+    ["Sn","Tin",50,118.71], ["I","Iodine",53,126.90], ["Ba","Barium",56,137.33],
+    ["Pt","Platinum",78,195.08], ["Au","Gold",79,196.97], ["Hg","Mercury",80,200.59],
+    ["Pb","Lead",82,207.2], ["U","Uranium",92,238.03]
+  ];
+
+  var ELEMENTS = {};
+  for (var e = 0; e < EL_DATA.length; e++) {
+    var row = EL_DATA[e];
+    ELEMENTS[row[0]] = { sym: row[0], name: row[1], z: row[2], mass: row[3] };
+  }
+
+  var BANDS = [
+    "The Krusty Krab kitchen",
+    "The Chum Bucket lab",
+    "Jellyfish Fields",
+    "Sandy's treedome",
+    "The secret formula"
+  ];
+
+  function L(band, kind, reactants, products, note) {
+    return { band: band, kind: kind, reactants: reactants, products: products, note: note };
+  }
+
+  /* ---------- 48 real reactions, five chapters ---------- */
+  var LEVELS = [
+    /* 01-10 — synthesis */
+    L(0,"synthesis",["H2","O2"],["H2O"],
+      "Hydrogen burning to water vapour. Nothing in the fryer should smell like that."),
+    L(0,"synthesis",["Na","Cl2"],["NaCl"],
+      "Sodium plus chlorine makes table salt \u2014 the cheapest ingredient in the building."),
+    L(0,"synthesis",["Mg","O2"],["MgO"],
+      "Magnesium burns with a white light. Sandy keeps a ribbon of it in the treedome."),
+    L(0,"synthesis",["H2","N2"],["NH3"],
+      "The Haber\u2013Bosch reaction: ammonia, and therefore every fertiliser on land."),
+    L(0,"synthesis",["Fe","O2"],["Fe2O3"],
+      "Iron plus air equals rust. Given enough decades, Squidward's bicycle."),
+    L(0,"synthesis",["CaO","H2O"],["Ca(OH)2"],
+      "Quicklime slaking with water \u2014 it releases enough heat to boil the water off."),
+    L(0,"synthesis",["SO3","H2O"],["H2SO4"],
+      "Acid rain, written as one step."),
+    L(0,"synthesis",["P4","O2"],["P4O10"],
+      "White phosphorus ignites in air on its own, which is why it is stored under water."),
+    L(0,"synthesis",["Li","O2"],["Li2O"],
+      "Lithium is this eager to oxidise. That eagerness is why it holds charge in a battery."),
+    L(0,"synthesis",["Al","O2"],["Al2O3"],
+      "Aluminium does not rust away like iron: it grows an invisible oxide shell and stops."),
+
+    /* 11-18 — decomposition */
+    L(1,"decomposition",["H2O2"],["H2O","O2"],
+      "Hydrogen peroxide coming apart. Bubbles in a cut mean this reaction is running."),
+    L(1,"decomposition",["CaCO3"],["CaO","CO2"],
+      "Limestone calcined \u2014 the first step to cement, chalk, and every plaster cast."),
+    L(1,"decomposition",["KClO3"],["KCl","O2"],
+      "Potassium chlorate is a laboratory oxygen supply with a fuse attached."),
+    L(1,"decomposition",["NaHCO3"],["Na2CO3","H2O","CO2"],
+      "Baking soda breaking down. The CO\u2082 is the rise in a batch of biscuits."),
+    L(1,"decomposition",["NH4NO3"],["N2O","H2O"],
+      "Ammonium nitrate decomposing to laughing gas \u2014 funny in a lecture, not in a warehouse."),
+    L(1,"decomposition",["HgO"],["Hg","O2"],
+      "Mercury(II) oxide splitting. Priestley isolated oxygen from a reaction shaped like this."),
+    L(1,"decomposition",["Ag2O"],["Ag","O2"],
+      "Silver oxide handing the metal back \u2014 the tarnish on old silverware, reversed."),
+    L(1,"decomposition",["Cu(OH)2"],["CuO","H2O"],
+      "A blue hydroxide drying out to black copper oxide."),
+
+    /* 19-27 — combustion */
+    L(2,"combustion",["CH4","O2"],["CO2","H2O"],
+      "Natural gas burning. It looks clean; the carbon still ends up in the air."),
+    L(2,"combustion",["C3H8","O2"],["CO2","H2O"],
+      "Propane \u2014 the grill out the back of the Krusty Krab."),
+    L(2,"combustion",["C2H6","O2"],["CO2","H2O"],
+      "Ethane, the second-simplest alkane and a feedstock for plastics."),
+    L(2,"combustion",["C4H10","O2"],["CO2","H2O"],
+      "Butane: cigarette lighters, and every pocket-sized flame Plankton has ever built."),
+    L(2,"combustion",["C2H5OH","O2"],["CO2","H2O"],
+      "Ethanol burning \u2014 the tidy end of a very complicated molecule."),
+    L(2,"combustion",["C6H12O6","O2"],["CO2","H2O"],
+      "Respiration. Every jellyfish, every sponge, and you, run on this exact equation."),
+    L(2,"combustion",["CS2","O2"],["CO2","SO2"],
+      "Carbon disulfide burns with a pale blue flame and a smell you do not forget."),
+    L(2,"combustion",["H2S","O2"],["SO2","H2O"],
+      "Hydrogen sulfide burning: rotten seaweed in, acid rain out."),
+    L(2,"combustion",["C8H18","O2"],["CO2","H2O"],
+      "Octane \u2014 the number on the pump at Mrs. Puff's boating school."),
+
+    /* 28-37 — replacement and neutralisation */
+    L(3,"replacement",["Zn","HCl"],["ZnCl2","H2"],
+      "Zinc in acid: the classic way to generate hydrogen in a school lab."),
+    L(3,"replacement",["Fe","H2SO4"],["FeSO4","H2"],
+      "Single replacement \u2014 iron pushes hydrogen out of its sulfate and takes its place."),
+    L(3,"replacement",["Al","HCl"],["AlCl3","H2"],
+      "Aluminium dissolves in acid, but only after its oxide shell is broken."),
+    L(3,"replacement",["NaOH","HCl"],["NaCl","H2O"],
+      "Neutralisation: a strong base and a strong acid, and salt water is all that is left."),
+    L(3,"replacement",["H2SO4","NaOH"],["Na2SO4","H2O"],
+      "Two hydrogens, two hydroxides. Count the two elements separately and it falls out."),
+    L(3,"replacement",["Ca(OH)2","H3PO4"],["Ca3(PO4)2","H2O"],
+      "Phosphate fertiliser \u2014 the treedome's tomatoes depend on this one."),
+    L(3,"replacement",["AgNO3","NaCl"],["AgCl","NaNO3"],
+      "Silver chloride drops out as a white solid. That precipitate is proof chloride was there."),
+    L(3,"replacement",["BaCl2","Na2SO4"],["BaSO4","NaCl"],
+      "Barium sulfate: insoluble, opaque, and the contrast drink in a hospital X-ray."),
+    L(3,"replacement",["Fe2O3","CO"],["Fe","CO2"],
+      "The blast furnace. Carbon monoxide takes the oxygen; iron stays behind."),
+    L(3,"replacement",["Pb(NO3)2","KI"],["PbI2","KNO3"],
+      "Lead iodide \u2014 the golden rain demonstration, and a poison you handle with gloves."),
+
+    /* 38-48 — redox, the hard ones */
+    L(4,"redox",["KMnO4","HCl"],["KCl","MnCl2","H2O","Cl2"],
+      "Permanganate oxidises chloride to chlorine gas. Four products, so count carefully."),
+    L(4,"redox",["Cu","HNO3"],["Cu(NO3)2","NO2","H2O"],
+      "Concentrated nitric acid gives brown NO\u2082. Fume hood, or not at all."),
+    L(4,"redox",["Cu","HNO3"],["Cu(NO3)2","NO","H2O"],
+      "Dilute acid instead: colourless NO. Same copper, a different product \u2014 compare it."),
+    L(4,"redox",["Cr2O3","Al"],["Cr","Al2O3"],
+      "The thermite reaction. Aluminium takes chromium's oxygen and releases a great deal of heat."),
+    L(4,"redox",["FeS2","O2"],["Fe2O3","SO2"],
+      "Roasting pyrite \u2014 step one in making the sulfuric acid inside every lead-acid battery."),
+    L(4,"redox",["NH3","O2"],["NO","H2O"],
+      "Ostwald, step one: ammonia to nitric oxide over hot platinum gauze."),
+    L(4,"redox",["NH3","O2"],["N2","H2O"],
+      "The same ammonia, simply burned. Compare it with the previous equation."),
+    L(4,"redox",["K2Cr2O7","HCl"],["KCl","CrCl3","H2O","Cl2"],
+      "Dichromate and acid chloride make chlorine. Chromium(VI) is a carcinogen \u2014 no kitchen demo."),
+    L(4,"redox",["MnO2","HCl"],["MnCl2","H2O","Cl2"],
+      "Manganese dioxide with acid gives chlorine: Scheele found it in 1774, before chlorine was known to be an element."),
+    L(4,"redox",["C2H2","O2"],["CO2","H2O"],
+      "Acetylene burns hot enough to weld steel \u2014 around 3,300 \u00b0C in oxygen."),
+    L(4,"redox",["Ca3(PO4)2","SiO2","C"],["CaSiO3","CO","P4"],
+      "The electric furnace: phosphate rock, sand and coke, and white phosphorus comes out.")
+  ];
+
+  /* ---------- exact rationals (BigInt) ---------- */
+  function bgcd(a, b) {
+    a = a < 0n ? -a : a; b = b < 0n ? -b : b;
+    while (b) { var t = a % b; a = b; b = t; }
+    return a;
+  }
+  function fr(n, d) {
+    n = BigInt(n); d = d === undefined ? 1n : BigInt(d);
+    if (d === 0n) throw new Error("division by zero");
+    if (d < 0n) { n = -n; d = -d; }
+    if (n === 0n) return [0n, 1n];
+    var g = bgcd(n, d);
+    return [n / g, d / g];
+  }
+  function fadd(a, b) { return fr(a[0] * b[1] + b[0] * a[1], a[1] * b[1]); }
+  function fsub(a, b) { return fr(a[0] * b[1] - b[0] * a[1], a[1] * b[1]); }
+  function fmul(a, b) { return fr(a[0] * b[0], a[1] * b[1]); }
+  function fdiv(a, b) { return fr(a[0] * b[1], a[1] * b[0]); }
+  function fzero(a) { return a[0] === 0n; }
+  function fsign(a) { return a[0] > 0n ? 1 : (a[0] < 0n ? -1 : 0); }
+  function fnum(a) { return Number(a[0]) / Number(a[1]); }
+
+  /* ---------- formula parser: symbols, subscripts, nested groups ---------- */
+  function parseFormula(src) {
+    if (typeof src !== "string" || !src.length) throw new Error("empty formula");
+    if (src.charAt(0) >= "0" && src.charAt(0) <= "9") throw new Error("formula starts with a digit: " + src);
+    var i = 0;
+    function digits() {
+      var s = "";
+      while (i < src.length) {
+        var c = src.charAt(i);
+        if (c < "0" || c > "9") break;
+        s += c; i++;
+      }
+      if (!s) return 1;
+      var n = parseInt(s, 10);
+      if (!(n > 0)) throw new Error("bad subscript in " + src);
+      return n;
+    }
+    function group() {
+      var acc = {};
+      while (i < src.length) {
+        var c = src.charAt(i);
+        if (c === "(") {
+          i++;
+          var inner = group();
+          if (src.charAt(i) !== ")") throw new Error("unbalanced parenthesis in " + src);
+          i++;
+          var mult = digits();
+          for (var k in inner) {
+            if (!Object.prototype.hasOwnProperty.call(inner, k)) continue;
+            acc[k] = (acc[k] || 0) + inner[k] * mult;
+          }
+        } else if (c === ")") {
+          return acc;
+        } else if (c >= "A" && c <= "Z") {
+          var sym = c; i++;
+          while (i < src.length) {
+            var l = src.charAt(i);
+            if (l < "a" || l > "z") break;
+            sym += l; i++;
+          }
+          if (!ELEMENTS[sym]) throw new Error("unknown element: " + sym);
+          var n = digits();
+          acc[sym] = (acc[sym] || 0) + n;
+        } else {
+          throw new Error("unexpected character '" + c + "' in " + src);
+        }
+      }
+      return acc;
+    }
+    var out = group();
+    if (i !== src.length) throw new Error("trailing characters in " + src);
+    return out;
+  }
+
+  /* ---------- the linear system for one equation ---------- */
+  function speciesOf(level) {
+    var out = [], i;
+    for (i = 0; i < level.reactants.length; i++) out.push({ f: level.reactants[i], sign: 1 });
+    for (i = 0; i < level.products.length; i++) out.push({ f: level.products[i], sign: -1 });
+    return out;
+  }
+
+  function systemOf(level) {
+    var sp = speciesOf(level);
+    var parsed = sp.map(function (s) { return parseFormula(s.f); });
+    var els = [];
+    parsed.forEach(function (p) {
+      for (var k in p) {
+        if (!Object.prototype.hasOwnProperty.call(p, k)) continue;
+        if (els.indexOf(k) < 0) els.push(k);
+      }
+    });
+    els.sort(function (a, b) { return ELEMENTS[a].z - ELEMENTS[b].z; });
+    return { sp: sp, parsed: parsed, els: els };
+  }
+
+  function ledger(level, coefs) {
+    var sys = systemOf(level), rows = [];
+    for (var r = 0; r < sys.els.length; r++) {
+      var el = sys.els[r], left = 0, right = 0;
+      for (var c = 0; c < sys.sp.length; c++) {
+        var n = (sys.parsed[c][el] || 0) * (coefs[c] || 0);
+        if (sys.sp[c].sign > 0) left += n; else right += n;
+      }
+      rows.push({ el: el, name: ELEMENTS[el].name, left: left, right: right, delta: right - left });
+    }
+    return rows;
+  }
+
+  function isBalanced(level, coefs) {
+    var rows = ledger(level, coefs);
+    for (var i = 0; i < rows.length; i++) if (rows[i].delta !== 0) return false;
+    for (var j = 0; j < coefs.length; j++) if (!(coefs[j] > 0)) return false;
+    return true;
+  }
+
+  function gcdlist(list) {
+    var g = 0;
+    for (var i = 0; i < list.length; i++) {
+      var v = Math.abs(list[i]);
+      while (v) { var t = g % v; g = v; v = t; }
+    }
+    return g || 1;
+  }
+
+  function lowestTerms(coefs) {
+    var g = gcdlist(coefs);
+    if (g === 1) return { coefs: coefs.slice(), reduced: true };
+    return { coefs: coefs.map(function (c) { return c / g; }), reduced: false };
+  }
+
+  /* ---------- reduction to row echelon form, exact ---------- */
+  function rref(M, cols) {
+    var rows = M.length, pivots = [], r = 0, c, k, j, p, pv, f;
+    for (c = 0; c < cols && r < rows; c++) {
+      p = -1;
+      for (k = r; k < rows; k++) if (!fzero(M[k][c])) { p = k; break; }
+      if (p < 0) continue;
+      var tmp = M[r]; M[r] = M[p]; M[p] = tmp;
+      pv = M[r][c];
+      for (j = 0; j < cols; j++) M[r][j] = fdiv(M[r][j], pv);
+      for (k = 0; k < rows; k++) {
+        if (k === r) continue;
+        f = M[k][c];
+        if (fzero(f)) continue;
+        for (j = 0; j < cols; j++) M[k][j] = fsub(M[k][j], fmul(f, M[r][j]));
+      }
+      pivots.push(c); r++;
+    }
+    return { pivots: pivots, rank: r };
+  }
+
+  /* ---------- solve: unique positive integer ratio, or explain why not ---------- */
+  function solve(level) {
+    var sys = systemOf(level), n = sys.sp.length;
+    if (!n) return { ok: false, reason: "empty equation" };
+    var A = [], r, c;
+    for (r = 0; r < sys.els.length; r++) {
+      var row = [];
+      for (c = 0; c < n; c++) {
+        row.push(fr((sys.parsed[c][sys.els[r]] || 0) * sys.sp[c].sign));
+      }
+      A.push(row);
+    }
+    var res = rref(A, n);
+    var nullity = n - res.rank;
+    if (nullity === 0) return { ok: false, reason: "only the trivial solution" };
+    if (nullity > 1) return { ok: false, reason: "more than one ratio balances it", nullity: nullity };
+
+    var free = [];
+    for (c = 0; c < n; c++) if (res.pivots.indexOf(c) < 0) free.push(c);
+    var x = [];
+    for (c = 0; c < n; c++) x.push(fr(0));
+    x[free[0]] = fr(1);
+    for (r = 0; r < res.pivots.length; r++) {
+      var p = res.pivots[r];
+      var v = A[r][free[0]];
+      x[p] = fr(-v[0], v[1]);
+    }
+
+    var sign = 0;
+    for (c = 0; c < n; c++) { if (!fzero(x[c])) { sign = fsign(x[c]); break; } }
+    if (sign === 0) return { ok: false, reason: "zero vector" };
+    if (sign < 0) x = x.map(function (v) { return fr(-v[0], v[1]); });
+    for (c = 0; c < n; c++) if (!fzero(x[c]) && fsign(x[c]) < 1) return { ok: false, reason: "no positive solution" };
+
+    var lcm = 1n;
+    for (c = 0; c < n; c++) { var d = x[c][1]; lcm = lcm / bgcd(lcm, d) * d; }
+    var ints = x.map(function (v) { return v[0] * (lcm / v[1]); });
+    var g = 0n;
+    for (c = 0; c < n; c++) g = bgcd(g, ints[c]);
+    if (g > 1n) ints = ints.map(function (v) { return v / g; });
+    for (c = 0; c < n; c++) if (ints[c] <= 0n) return { ok: false, reason: "no positive solution" };
+
+    var nums = ints.map(Number);
+    // verify the solver's own answer against the atom counts
+    var check = ledger(level, nums);
+    for (r = 0; r < check.length; r++) if (check[r].delta !== 0) return { ok: false, reason: "internal check failed" };
+    return {
+      ok: true,
+      coefs: nums,
+      max: Math.max.apply(null, nums),
+      sum: nums.reduce(function (a, b) { return a + b; }, 0),
+      formulas: sys.sp.map(function (s) { return s.f; })
+    };
+  }
+
+  /* ---------- molar mass ---------- */
+  function molarMass(formula) {
+    var p = parseFormula(formula), total = 0;
+    for (var k in p) {
+      if (!Object.prototype.hasOwnProperty.call(p, k)) continue;
+      if (!ELEMENTS[k] || typeof ELEMENTS[k].mass !== "number") return null;
+      total += ELEMENTS[k].mass * p[k];
+    }
+    return total;
+  }
+
+  function massReport(level, coefs) {
+    var sp = speciesOf(level), left = 0, right = 0, unknown = false, rows = [];
+    for (var i = 0; i < sp.length; i++) {
+      var m = molarMass(sp[i].f);
+      if (m === null) unknown = true;
+      var total = m === null ? null : m * coefs[i];
+      if (m !== null) { if (sp[i].sign > 0) left += total; else right += total; }
+      rows.push({ f: sp[i].f, mass: m, total: total, side: sp[i].sign > 0 ? "left" : "right" });
+    }
+    return { rows: rows, left: left, right: right, unknown: unknown };
+  }
+
+  /* ---------- hints: three steps, never the whole answer ---------- */
+  function hintText(level, coefs, tier) {
+    var rows = ledger(level, coefs);
+    var off = rows.filter(function (r) { return r.delta !== 0; });
+    if (!off.length) return "Every element already balances. If nothing happened, check that no coefficient is zero.";
+    var worst = off.slice().sort(function (a, b) {
+      var d = Math.abs(b.delta) - Math.abs(a.delta);
+      return d !== 0 ? d : a.el.localeCompare(b.el);
+    })[0];
+
+    if (tier <= 1) {
+      return "Pick one element and count it on both sides. Find the compound that contains it with the " +
+             "smallest coefficient, and change only that number first \u2014 leave the rest alone until one row reads 0.";
+    }
+    if (tier === 2) {
+      return "Start with <strong>" + worst.name + " (" + worst.el + ")</strong>: " + worst.left +
+             " atom" + (worst.left === 1 ? "" : "s") + " on the left, " + worst.right + " on the right. " +
+             "Which compound holds " + worst.el + ", and by what whole number would you multiply it?";
+    }
+    var sol = solve(level);
+    if (!sol.ok) return "This equation has no single ratio \u2014 tell the developer; every shipped level is checked.";
+    for (var i = 0; i < sol.coefs.length; i++) {
+      if ((coefs[i] || 0) !== sol.coefs[i]) {
+        var where = i < level.reactants.length ? "left" : "right";
+        return "Set the coefficient on <strong>" + sol.formulas[i] + "</strong> (the " +
+               ordinal(i < level.reactants.length ? i + 1 : i - level.reactants.length + 1) +
+               " compound on the " + where + ") to <strong>" + sol.coefs[i] + "</strong>.";
+      }
+    }
+    return "Every coefficient matches the unique balance. Something else is off \u2014 press Start over.";
+  }
+
+  function ordinal(n) {
+    var s = ["th", "st", "nd", "rd"], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+
+  /* ---------- starting coefficients ----------
+     Seven of these reactions are 1:1:1, so an all-ones start would hand the
+     player a solved puzzle. The seed is deterministic (same level, same start)
+     but never balanced, and it is the single source of truth the UI reads. */
+  function seedCoefs(level) {
+    var n = speciesOf(level).length, out = [], i, k, v, t;
+    for (i = 0; i < n; i++) out.push(1 + ((i * 5 + level.reactants.length) % 3));
+    if (!isBalanced(level, out)) return out;
+    for (k = 0; k < n; k++) {
+      for (v = 1; v <= 6; v++) {
+        t = out.slice(); t[k] = v;
+        if (!isBalanced(level, t)) return t;
+      }
+    }
+    return out;
+  }
+
+  function difficulty(level) {
+    var sys = systemOf(level);
+    return sys.els.length * 2 + sys.sp.length;
+  }
+
+  return {
+    ELEMENTS: ELEMENTS,
+    EL_DATA: EL_DATA,
+    BANDS: BANDS,
+    LEVELS: LEVELS,
+    parseFormula: parseFormula,
+    speciesOf: speciesOf,
+    systemOf: systemOf,
+    ledger: ledger,
+    isBalanced: isBalanced,
+    lowestTerms: lowestTerms,
+    solve: solve,
+    molarMass: molarMass,
+    massReport: massReport,
+    hintText: hintText,
+    seedCoefs: seedCoefs,
+    difficulty: difficulty
+  };
+})();
+/* CORE-END */
+</script>
+<script>
+/* ============================================================================
+   DOM layer. One direction only: state -> DOM. Nothing here computes chemistry.
+   ========================================================================== */
+(function () {
+  "use strict";
+
+  var C = Core, L = C.LEVELS, MAXC = 30, KEY = "secretformula.v1";
+  var HINT_IDLE = "Hints go one step at a time: the method, then the element furthest out, then a single coefficient. Nothing is counted against you.";
+
+  function $(id) { return document.getElementById(id); }
+  function clamp(n, lo, hi) { return n < lo ? lo : (n > hi ? hi : n); }
+
+  var state = {
+    level: 0,
+    coefs: {},
+    solved: [],
+    hints: {},
+    settings: { audio: false, big: false, calm: false }
+  };
+  var undoStack = [];
+  var sel = 0;
+  var speciesEls = [];
+
+  /* ------------------------------- persist ------------------------------- */
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var s = JSON.parse(raw);
+      if (!s || typeof s !== "object") return;
+      if (typeof s.level === "number") state.level = clamp(s.level | 0, 0, L.length - 1);
+      if (s.coefs && typeof s.coefs === "object") state.coefs = s.coefs;
+      if (Object.prototype.toString.call(s.solved) === "[object Array]") {
+        state.solved = s.solved.filter(function (n) {
+          return typeof n === "number" && n >= 0 && n < L.length;
+        });
+      }
+      if (s.hints && typeof s.hints === "object") state.hints = s.hints;
+      if (s.settings && typeof s.settings === "object") {
+        state.settings.audio = !!s.settings.audio;
+        state.settings.big = !!s.settings.big;
+        state.settings.calm = !!s.settings.calm;
+      }
+    } catch (e) { /* private mode, file:// restrictions: run without saving */ }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  /* ------------------------------- model -------------------------------- */
+  function coefsFor(i) {
+    var c = state.coefs[i];
+    if (Object.prototype.toString.call(c) === "[object Array]" && c.length === speciesCount(i)) {
+      return c.map(function (v) { return clamp(Math.round(v) || 1, 1, MAXC); });
+    }
+    return C.seedCoefs(L[i]);
+  }
+  function speciesCount(i) {
+    var lv = L[i];
+    return lv.reactants.length + lv.products.length;
+  }
+  function isSolved(i) { return state.solved.indexOf(i) >= 0; }
+
+  /* ------------------------------- render ------------------------------- */
+  function renderFormula(f) {
+    var out = "", i = 0;
+    while (i < f.length) {
+      var ch = f.charAt(i);
+      if (ch >= "0" && ch <= "9") {
+        var j = i;
+        while (j < f.length) {
+          var d = f.charAt(j);
+          if (d < "0" || d > "9") break;
+          j++;
+        }
+        out += "<sub>" + f.slice(i, j) + "</sub>";
+        i = j;
+      } else {
+        out += ch;
+        i++;
+      }
+    }
+    return out;
+  }
+
+  function buildEquation() {
+    var lv = L[state.level], co = coefsFor(state.level);
+    var eq = $("equation");
+    eq.innerHTML = "";
+    speciesEls = [];
+    sel = 0;
+
+    /* an operator is glued to the species that follows it, so a line can never
+       break leaving a dangling "+" or an arrow at the end of a row. */
+    function term() {
+      var t = document.createElement("span");
+      t.className = "term";
+      eq.appendChild(t);
+      return t;
+    }
+    function op(txt) {
+      var s = document.createElement("span");
+      s.className = "op";
+      s.textContent = txt;
+      s.setAttribute("aria-hidden", "true");
+      return s;
+    }
+    function species(formula, idx, host) {
+      var wrap = document.createElement("div");
+      wrap.className = "species";
+      wrap.setAttribute("role", "group");
+      wrap.setAttribute("aria-label", "Coefficient for " + formula);
+      wrap.tabIndex = 0;
+
+      var ctl = document.createElement("div");
+      ctl.className = "coefctl";
+
+      var dec = document.createElement("button");
+      dec.type = "button";
+      dec.className = "cbtn";
+      dec.textContent = "\u2212";
+      dec.setAttribute("aria-label", "Decrease the coefficient of " + formula);
+      dec.tabIndex = -1;
+
+      var val = document.createElement("span");
+      val.className = "cval";
+      val.textContent = String(co[idx]);
+
+      var inc = document.createElement("button");
+      inc.type = "button";
+      inc.className = "cbtn";
+      inc.textContent = "+";
+      inc.setAttribute("aria-label", "Increase the coefficient of " + formula);
+      inc.tabIndex = -1;
+
+      ctl.appendChild(dec); ctl.appendChild(val); ctl.appendChild(inc);
+
+      var f = document.createElement("div");
+      f.className = "formula";
+      f.innerHTML = renderFormula(formula);
+
+      wrap.appendChild(ctl);
+      wrap.appendChild(f);
+
+      dec.addEventListener("click", function (ev) { ev.stopPropagation(); select(idx); adjust(idx, -1); });
+      inc.addEventListener("click", function (ev) { ev.stopPropagation(); select(idx); adjust(idx, 1); });
+      wrap.addEventListener("click", function () { select(idx); });
+      wrap.addEventListener("focus", function () { select(idx); });
+
+      speciesEls.push(wrap);
+      host.appendChild(wrap);
+    }
+
+    var t0 = term();
+    species(lv.reactants[0], 0, t0);
+    for (var ri = 1; ri < lv.reactants.length; ri++) {
+      var tr = term();
+      tr.appendChild(op("+"));
+      species(lv.reactants[ri], ri, tr);
+    }
+    var ta = term();
+    ta.appendChild(op("\u2192"));
+    species(lv.products[0], lv.reactants.length, ta);
+    for (var pi = 1; pi < lv.products.length; pi++) {
+      var tp = term();
+      tp.appendChild(op("+"));
+      species(lv.products[pi], lv.reactants.length + pi, tp);
+    }
+
+    select(0, true);
+  }
+
+  function select(i, focus) {
+    if (!speciesEls.length) return;
+    sel = clamp(i, 0, speciesEls.length - 1);
+    for (var k = 0; k < speciesEls.length; k++) {
+      speciesEls[k].classList.toggle("sel", k === sel);
+    }
+    if (focus) {
+      try { speciesEls[sel].focus({ preventScroll: true }); } catch (e) { speciesEls[sel].focus(); }
+    }
+  }
+
+  function renderLedger() {
+    var rows = C.ledger(L[state.level], coefsFor(state.level));
+    var tb = $("ledger").querySelector("tbody");
+    tb.innerHTML = "";
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var tr = document.createElement("tr");
+      tr.className = r.delta === 0 ? "row-ok" : "row-bad";
+      tr.setAttribute("data-el", r.el);
+      tr.innerHTML =
+        '<td class="el">' + r.el + "</td>" +
+        '<td class="name">' + r.name + "</td>" +
+        '<td class="num">' + r.left + "</td>" +
+        '<td class="num">' + r.right + "</td>" +
+        '<td class="num delta">' + (r.delta > 0 ? "+" + r.delta : String(r.delta)) + "</td>";
+      tb.appendChild(tr);
+    }
+  }
+
+  function updateValues() {
+    var co = coefsFor(state.level);
+    for (var i = 0; i < speciesEls.length; i++) {
+      var v = speciesEls[i].querySelector(".cval");
+      if (v) v.textContent = String(co[i]);
+    }
+  }
+
+  function renderStatus() {
+    var lv = L[state.level], co = coefsFor(state.level);
+    var st = $("status");
+    st.className = "status";
+    var bal = C.isBalanced(lv, co);
+    if (bal) {
+      var lt = C.lowestTerms(co);
+      if (lt.reduced) {
+        st.textContent = "Balanced, and in lowest terms. This is how it would be written in a textbook.";
+      } else {
+        st.textContent = "Balanced \u2014 but every coefficient shares a factor of " +
+          (co[0] / lt.coefs[0]) + ". Chemistry writes the smallest whole numbers: " +
+          lt.coefs.join(" : ") + ".";
+      }
+      st.classList.add("ok");
+    } else {
+      var rows = C.ledger(lv, co), off = 0;
+      for (var i = 0; i < rows.length; i++) if (rows[i].delta !== 0) off++;
+      if (off === rows.length) {
+        st.textContent = off + " element" + (off === 1 ? "" : "s") + " still differ. Change one coefficient and watch the ledger.";
+      } else {
+        st.textContent = off + " of " + rows.length + " elements still differ \u2014 the green rows are already done.";
+      }
+    }
+    return bal;
+  }
+
+  function renderMass(bal) {
+    var box = $("massrow");
+    if (!bal) { box.hidden = true; box.innerHTML = ""; return; }
+    var lv = L[state.level], co = coefsFor(state.level);
+    var rep = C.massReport(lv, co);
+    var parts = rep.rows.map(function (r) {
+      var m = r.mass === null ? "\u2014" : r.mass.toFixed(2) + " g/mol";
+      return "<span>" + renderFormula(r.f) + " <b>" + m + "</b></span>";
+    });
+    parts.push('<span class="mtotal">left ' + rep.left.toFixed(2) + " g \u00b7 right " +
+      rep.right.toFixed(2) + " g \u2014 mass conserved</span>");
+    box.innerHTML = parts.join("");
+    box.hidden = false;
+  }
+
+  function renderProgress() {
+    var n = state.solved.length, total = L.length;
+    $("progFill").style.width = (100 * n / total).toFixed(1) + "%";
+    $("progText").textContent = n + " of " + total + " balanced";
+    var bar = $("progBar");
+    bar.setAttribute("aria-valuenow", String(n));
+    bar.setAttribute("aria-valuemax", String(total));
+  }
+
+  function renderHead() {
+    var lv = L[state.level];
+    $("bandName").textContent = C.BANDS[lv.band];
+    $("levelNo").textContent = "Equation " + (state.level + 1) + " of " + L.length;
+    $("note").textContent = lv.note;
+  }
+
+  function renderTools(bal) {
+    var next = $("btnNext");
+    next.hidden = !bal;
+    next.textContent = state.level + 1 < L.length ? "Next equation" : "Revisit the first equation";
+    var undo = $("btnUndo");
+    var has = undoStack.length && undoStack[undoStack.length - 1].level === state.level;
+    undo.disabled = !has;
+    var tier = state.hints[state.level] || 0;
+    var badge = $("hintCount");
+    if (tier > 0) { badge.hidden = false; badge.textContent = tier + "/3"; }
+    else { badge.hidden = true; badge.textContent = ""; }
+    $("btnHint").disabled = tier >= 3 && !!bal;
+  }
+
+  function renderAll() {
+    renderHead();
+    buildEquation();
+    updateValues();
+    renderLedger();
+    var bal = renderStatus();
+    renderMass(bal);
+    renderProgress();
+    renderTools(bal);
+    save();
+  }
+
+  /* ------------------------------- actions ------------------------------ */
+  function adjust(idx, d) {
+    var co = coefsFor(state.level).slice();
+    var n = co[idx] + d;
+    if (n < 1 || n > MAXC) return;
+    pushUndo();
+    co[idx] = n;
+    state.coefs[state.level] = co;
+    afterChange();
+    tone(d > 0 ? 1 : -1);
+  }
+
+  function setCoef(idx, n) {
+    if (!(n >= 1 && n <= MAXC)) return;
+    var co = coefsFor(state.level).slice();
+    if (co[idx] === n) return;
+    pushUndo();
+    co[idx] = n;
+    state.coefs[state.level] = co;
+    afterChange();
+    tone(1);
+  }
+
+  function pushUndo() {
+    undoStack.push({ level: state.level, coefs: coefsFor(state.level).slice() });
+    if (undoStack.length > 120) undoStack.shift();
+  }
+
+  function afterChange() {
+    updateValues();
+    renderLedger();
+    var bal = renderStatus();
+    renderMass(bal);
+    renderTools(bal);
+    if (bal) onBalanced();
+    save();
+  }
+
+  function onBalanced() {
+    if (!isSolved(state.level)) {
+      state.solved.push(state.level);
+      state.solved.sort(function (a, b) { return a - b; });
+      renderProgress();
+      renderLevelGrid();
+      chime();
+    } else {
+      save();
+    }
+  }
+
+  function doUndo() {
+    var last = undoStack[undoStack.length - 1];
+    if (!last || last.level !== state.level) return;
+    undoStack.pop();
+    state.coefs[state.level] = last.coefs;
+    updateValues();
+    renderLedger();
+    var bal = renderStatus();
+    renderMass(bal);
+    renderTools(bal);
+    save();
+  }
+
+  function doReset() {
+    pushUndo();
+    state.coefs[state.level] = C.seedCoefs(L[state.level]);
+    afterChange();
+  }
+
+  function doHint() {
+    var tier = (state.hints[state.level] || 0) + 1;
+    if (tier > 3) tier = 3;
+    state.hints[state.level] = tier;
+    $("hintText").innerHTML = C.hintText(L[state.level], coefsFor(state.level), tier);
+    renderTools(C.isBalanced(L[state.level], coefsFor(state.level)));
+    save();
+  }
+
+  function goLevel(i) {
+    state.level = clamp(i, 0, L.length - 1);
+    undoStack = [];
+    $("hintText").textContent = HINT_IDLE;
+    renderAll();
+    closeAll();
+    window.scrollTo({ top: 0, behavior: state.settings.calm ? "auto" : "smooth" });
+  }
+
+  function nextLevel() {
+    goLevel(state.level + 1 < L.length ? state.level + 1 : 0);
+  }
+
+  /* -------------------------------- audio ------------------------------- */
+  var actx = null;
+  function audio() {
+    if (!state.settings.audio) return null;
+    try {
+      if (!actx) {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        actx = new AC();
+      }
+      if (actx.state === "suspended") actx.resume();
+      return actx;
+    } catch (e) { return null; }
+  }
+  function blip(freq, dur, gain) {
+    var ac = audio();
+    if (!ac) return;
+    try {
+      var o = ac.createOscillator(), g = ac.createGain();
+      o.type = "sine";
+      o.frequency.value = freq;
+      o.connect(g); g.connect(ac.destination);
+      var t = ac.currentTime;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(gain, t + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.start(t); o.stop(t + dur + 0.02);
+    } catch (e) {}
+  }
+  function tone(dir) { blip(dir > 0 ? 587.33 : 440.0, 0.09, 0.035); }
+  function chime() { blip(659.25, 0.18, 0.05); blip(987.77, 0.26, 0.04); }
+
+  /* ------------------------------- dialogs ------------------------------ */
+  function openDialog(id) {
+    var d = $(id);
+    if (d && d.showModal) d.showModal();
+  }
+  function closeAll() {
+    var ds = document.querySelectorAll("dialog[open]");
+    for (var i = 0; i < ds.length; i++) if (ds[i].close) ds[i].close();
+  }
+
+  function renderElementGrid() {
+    var used = {};
+    L.forEach(function (lv) {
+      lv.reactants.concat(lv.products).forEach(function (f) {
+        var p = C.parseFormula(f);
+        for (var k in p) if (Object.prototype.hasOwnProperty.call(p, k)) used[k] = true;
+      });
+    });
+    C.EL_DATA.forEach(function (row) {
+      var d = document.createElement("div");
+      d.className = "elchip" + (used[row[0]] ? " used" : "");
+      d.innerHTML = "<b>" + row[0] + " \u00b7 " + row[2] + "</b><span>" + row[1] + "<br>" +
+        row[3] + " g/mol</span>";
+      $("elGrid").appendChild(d);
+    });
+  }
+
+  function renderLevelGrid() {
+    var grid = $("lvGrid");
+    grid.innerHTML = "";
+    C.BANDS.forEach(function (band, bi) {
+      var h = document.createElement("div");
+      h.className = "lvband";
+      h.textContent = band;
+      grid.appendChild(h);
+      var row = document.createElement("div");
+      row.className = "lvrow";
+      L.forEach(function (lv, i) {
+        if (lv.band !== bi) return;
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "lvbtn" + (i === state.level ? " cur" : "") + (isSolved(i) ? " done" : "");
+        b.textContent = String(i + 1);
+        b.setAttribute("aria-label", "Equation " + (i + 1) + (isSolved(i) ? ", balanced" : ""));
+        b.addEventListener("click", function () { goLevel(i); });
+        row.appendChild(b);
+      });
+      grid.appendChild(row);
+    });
+  }
+
+  /* ------------------------------ keyboard ------------------------------ */
+  document.addEventListener("keydown", function (ev) {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (document.querySelector("dialog[open]")) return;
+    var t = ev.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
+    var k = ev.key;
+
+    if (k === "ArrowRight") { select(sel + 1); ev.preventDefault(); }
+    else if (k === "ArrowLeft") { select(sel - 1); ev.preventDefault(); }
+    else if (k === "ArrowUp") { adjust(sel, 1); ev.preventDefault(); }
+    else if (k === "ArrowDown") { adjust(sel, -1); ev.preventDefault(); }
+    else if (k.length === 1 && k >= "1" && k <= "9") { setCoef(sel, parseInt(k, 10)); ev.preventDefault(); }
+    else if (k === "h" || k === "H") { doHint(); }
+    else if (k === "u" || k === "U") { doUndo(); }
+    else if (k === "r" || k === "R") { doReset(); }
+    else if (k === "n" || k === "N") { if (!$("btnNext").hidden) nextLevel(); }
+  });
+
+  /* ------------------------------- wiring ------------------------------- */
+  function applySettings() {
+    document.body.classList.toggle("big", state.settings.big);
+    document.body.classList.toggle("calm", state.settings.calm);
+    $("optAudio").checked = state.settings.audio;
+    $("optBig").checked = state.settings.big;
+    $("optCalm").checked = state.settings.calm;
+  }
+
+  function boot() {
+    load();
+    applySettings();
+    renderElementGrid();
+    renderLevelGrid();
+    renderAll();
+
+    $("btnHint").addEventListener("click", doHint);
+    $("btnUndo").addEventListener("click", doUndo);
+    $("btnReset").addEventListener("click", doReset);
+    $("btnNext").addEventListener("click", nextLevel);
+    $("btnRules").addEventListener("click", function () { openDialog("dlgRules"); });
+    $("btnTable").addEventListener("click", function () { openDialog("dlgTable"); });
+    $("btnLevels").addEventListener("click", function () { openDialog("dlgLevels"); });
+
+    var closers = document.querySelectorAll("[data-close]");
+    for (var i = 0; i < closers.length; i++) {
+      closers[i].addEventListener("click", closeAll);
+    }
+
+    $("optAudio").addEventListener("change", function (e) {
+      state.settings.audio = e.target.checked; save();
+      if (state.settings.audio) blip(523.25, 0.12, 0.04);
+    });
+    $("optBig").addEventListener("change", function (e) {
+      state.settings.big = e.target.checked; applySettings(); save();
+    });
+    $("optCalm").addEventListener("change", function (e) {
+      state.settings.calm = e.target.checked; applySettings(); save();
+    });
+  }
+
+  /* --------------------------- test hook (tier 2) ----------------------- */
+  var DEFAULTS = Object.freeze({ level: 0, settings: { audio: false, big: false, calm: false } });
+
+  window.FORMULA = {
+    Core: C,
+    level: function () { return state.level; },
+    coefs: function () { return coefsFor(state.level); },
+    setCoefs: function (arr) {
+      var seed = C.seedCoefs(L[state.level]);
+      var co = arr.slice(0, speciesCount(state.level));
+      while (co.length < speciesCount(state.level)) co.push(seed[co.length]);
+      pushUndo();
+      state.coefs[state.level] = co.map(function (v) { return clamp(Math.round(v) || 1, 1, MAXC); });
+      afterChange();
+      return coefsFor(state.level);
+    },
+    adjust: adjust,
+    goLevel: goLevel,
+    nextLevel: nextLevel,
+    resetLevel: doReset,
+    hint: doHint,
+    solveNow: function () { return C.solve(L[state.level]); },
+    balanced: function () { return C.isBalanced(L[state.level], coefsFor(state.level)); },
+    isSolved: function (i) { return isSolved(i === undefined ? state.level : i); },
+    solvedCount: function () { return state.solved.length; },
+    settings: function () { return JSON.parse(JSON.stringify(state.settings)); },
+    defaults: DEFAULTS,
+    restoreDefaults: function () {
+      state.settings = { audio: false, big: false, calm: false };
+      applySettings(); save();
+      return this.settings();
+    },
+    dom: function () {
+      var rows = [];
+      var trs = $("ledger").querySelectorAll("tbody tr");
+      for (var i = 0; i < trs.length; i++) {
+        var tds = trs[i].querySelectorAll("td");
+        rows.push({
+          el: tds[0].textContent,
+          left: tds[2].textContent,
+          right: tds[3].textContent,
+          delta: tds[4].textContent,
+          ok: trs[i].className === "row-ok"
+        });
+      }
+      var vals = [];
+      for (var j = 0; j < speciesEls.length; j++) {
+        vals.push(speciesEls[j].querySelector(".cval").textContent);
+      }
+      return {
+        levelNo: $("levelNo").textContent,
+        band: $("bandName").textContent,
+        status: $("status").textContent,
+        statusClass: $("status").className,
+        coefs: vals,
+        rows: rows,
+        selected: sel,
+        nextVisible: (function () {
+          var b = $("btnNext");
+          return !b.hidden && b.getBoundingClientRect().height > 0;
+        })(),
+        hintText: $("hintText").textContent,
+        hintBadge: $("hintCount").textContent,
+        progressWidth: $("progFill").style.width,
+        progressText: $("progText").textContent,
+        ariaNow: $("progBar").getAttribute("aria-valuenow"),
+        massHidden: $("massrow").getBoundingClientRect().height === 0,
+        undoDisabled: $("btnUndo").disabled,
+        bodyClass: document.body.className
+      };
+    }
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>

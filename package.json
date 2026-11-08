@@ -1,0 +1,12 @@
+{
+  "name": "secret-formula",
+  "version": "1.0.0",
+  "description": "A SpongeBob-tribute chemistry puzzle: balance real equations with an exact rational solver behind every check.",
+  "private": true,
+  "scripts": {
+    "verify": "node scripts/verify_app.js",
+    "verify:browser": "node scripts/browser_check.js",
+    "verify:all": "node scripts/verify_app.js && node scripts/browser_check.js"
+  },
+  "license": "MIT"
+}
