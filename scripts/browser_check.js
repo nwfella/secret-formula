@@ -32,6 +32,11 @@ const J = (api, body) => api.evaluate("(() => {" + body + "})()");
 
   await withPage({ url: URL, width: 1280, height: 980, dpr: 1, mobile: false, waitMs: 1200 }, async (api) => {
 
+    /* A silent relaunch would double-count every assertion and hide a flake:
+       the run must reach its verdict on the first attempt. */
+    console.log("     launch attempt: " + api.attempt);
+    eq("gate ran on the first launch attempt (no silent retry)", api.attempt, 1);
+
     /* ---------------- boot ---------------- */
     const boot = await J(api, "return {hook: !!window.FORMULA, title: document.title, dom: window.FORMULA ? window.FORMULA.dom() : null};");
     check("page boots with the FORMULA hook", boot.hook === true);

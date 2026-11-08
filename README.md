@@ -70,11 +70,11 @@ detail. That shaped every decision, and it makes the game better for everyone:
 
 ## Verification
 
-Two gates, 1008 assertions, both green before every deploy:
+Two gates, 1009 assertions, both green before every deploy:
 
 ```bash
 npm run verify          # 915 assertions — the chemistry, in Node, no browser
-npm run verify:browser  #  93 assertions — a real Chrome over CDP
+npm run verify:browser  #  94 assertions — a real Chrome over CDP
 ```
 
 The Node gate lifts the shipped `CORE` block out of `index.html` and proves, for all 48

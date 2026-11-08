@@ -139,6 +139,7 @@ async function withPage(opts, fn) {
       return await fn({
         send: (m, p) => send(m, p, sessionId),
         errors,
+        attempt,
         /* evaluate an expression in the page and return its JSON value */
         evaluate: async (expr) => {
           const r = await send('Runtime.evaluate',
